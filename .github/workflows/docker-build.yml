@@ -39,10 +39,15 @@ jobs:
           username: ${{ secrets.DOCKER_HUB_USERNAME }}
           password: ${{ secrets.DOCKER_HUB_ACCESS_TOKEN }}
 
-      # 🏗️ Build Docker image
+      # 🏗️ Build Docker image (LATEST + COMMIT TAG)
       - name: Build Docker image
         run: |
-          docker build -t ${{ secrets.DOCKER_HUB_USERNAME }}/docker-mini-app:latest .
+          SHORT_SHA=$(echo $GITHUB_SHA | cut -c1-7)
+
+          docker build \
+            -t ${{ secrets.DOCKER_HUB_USERNAME }}/docker-mini-app:latest \
+            -t ${{ secrets.DOCKER_HUB_USERNAME }}/docker-mini-app:$SHORT_SHA \
+            .
 
       # ▶️ Start containers
       - name: Start containers
@@ -59,10 +64,13 @@ jobs:
           done
           exit 1
 
-      # 📤 Push image to Docker Hub
+      # 📤 Push images to Docker Hub
       - name: Push image to Docker Hub
         run: |
+          SHORT_SHA=$(echo $GITHUB_SHA | cut -c1-7)
+
           docker push ${{ secrets.DOCKER_HUB_USERNAME }}/docker-mini-app:latest
+          docker push ${{ secrets.DOCKER_HUB_USERNAME }}/docker-mini-app:$SHORT_SHA
 
       # 🧹 Cleanup
       - name: Stop containers
